@@ -91,6 +91,15 @@ export function useWebSocket(projectId: string) {
   const sendMessage = useCallback((content: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const { selectedProvider, selectedModel } = useChatStore.getState();
+
+      // 유저 메시지를 즉시 store에 추가 (optimistic update)
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "user",
+        content,
+        timestamp: new Date().toISOString(),
+      });
+
       setLoading(true);
       const payload = JSON.stringify({
         content,
@@ -100,7 +109,7 @@ export function useWebSocket(projectId: string) {
       console.log(`[${ridRef.current}] ${new Date().toISOString()} SEND ${payload}`);
       wsRef.current.send(payload);
     }
-  }, [setLoading]);
+  }, [addMessage, setLoading]);
 
   return { sendMessage };
 }
