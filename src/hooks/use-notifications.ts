@@ -2,14 +2,19 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { PaginatedNotifications } from "@/types";
+import type { NotificationEventType, PaginatedNotifications } from "@/types";
 
-export function useNotifications(projectId?: string) {
+export function useNotifications(
+  projectId?: string,
+  eventType?: NotificationEventType
+) {
   return useInfiniteQuery<PaginatedNotifications>({
-    queryKey: ["notifications", projectId],
+    queryKey: ["notifications", projectId, eventType],
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
       if (pageParam) params.set("cursor", pageParam as string);
+      params.set("limit", "20");
+      if (eventType) params.set("event_type", eventType);
 
       const base = projectId
         ? `/api/projects/${projectId}/notifications`
