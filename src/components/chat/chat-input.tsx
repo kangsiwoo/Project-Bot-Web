@@ -64,7 +64,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
       )}
       {isLoading && isConnected && (
         <p className="mt-1 text-xs text-muted-foreground">
-          응답 대기 중... Enter로 전송, Shift+Enter로 줄바꿈
+          응답 대기 중...
         </p>
       )}
     </div>

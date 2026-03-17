@@ -2,11 +2,15 @@
 
 import { create } from "zustand";
 import type { ChatMessage } from "@/types";
+import type { ProviderId } from "@/lib/llm-providers";
+import { getDefaultModel } from "@/lib/llm-providers";
 
 interface ChatState {
   messages: ChatMessage[];
   isConnected: boolean;
   isLoading: boolean;
+  selectedProvider: ProviderId;
+  selectedModel: string;
 
   // 액션
   addMessage: (message: ChatMessage) => void;
@@ -14,12 +18,16 @@ interface ChatState {
   setConnected: (connected: boolean) => void;
   setLoading: (loading: boolean) => void;
   clearMessages: () => void;
+  setProvider: (provider: ProviderId) => void;
+  setModel: (model: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   isConnected: false,
   isLoading: false,
+  selectedProvider: "claude_code",
+  selectedModel: "sonnet",
 
   addMessage: (message) =>
     set((state) => ({ messages: [...state.messages, message] })),
@@ -36,4 +44,9 @@ export const useChatStore = create<ChatState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 
   clearMessages: () => set({ messages: [] }),
+
+  setProvider: (provider) =>
+    set({ selectedProvider: provider, selectedModel: getDefaultModel(provider) }),
+
+  setModel: (model) => set({ selectedModel: model }),
 }));

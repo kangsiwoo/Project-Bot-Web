@@ -64,8 +64,8 @@ export function Topbar() {
         />
       </div>
 
-      {/* Spacer */}
-      <div className="flex-1 md:flex-none" />
+      {/* Spacer — 프로필을 오른쪽 끝으로 밀기 */}
+      <div className="flex-1" />
 
       {/* User avatar (desktop) */}
       <div className="hidden md:block">
