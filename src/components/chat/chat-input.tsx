@@ -33,18 +33,18 @@ export function ChatInput({ onSend }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="sticky bottom-0 border-t bg-background p-4">
       <div className="flex items-end gap-2">
         <Textarea
           placeholder={
             isConnected
-              ? "Claude Code에게 메시지를 보내세요... (Shift+Enter로 줄바꿈)"
+              ? "Claude Code에 명령 보내기..."
               : "연결 중..."
           }
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={!isConnected}
+          disabled={!isConnected || isLoading}
           className="min-h-[44px] max-h-32 resize-none"
           rows={1}
         />
@@ -60,6 +60,11 @@ export function ChatInput({ onSend }: ChatInputProps) {
       {!isConnected && (
         <p className="mt-1 text-xs text-amber-600">
           WebSocket 연결이 끊어졌습니다. 재연결 시도 중...
+        </p>
+      )}
+      {isLoading && isConnected && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          응답 대기 중... Enter로 전송, Shift+Enter로 줄바꿈
         </p>
       )}
     </div>

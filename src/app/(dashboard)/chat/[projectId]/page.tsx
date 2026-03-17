@@ -10,7 +10,7 @@ import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bot, Loader2 } from "lucide-react";
+import { Terminal } from "lucide-react";
 
 export default function ChatPage({
   params,
@@ -32,11 +32,18 @@ export default function ChatPage({
     <div className="flex h-full flex-col">
       {/* 헤더 */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <Bot className="h-5 w-5 text-indigo-600" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-mono text-xs font-bold">
+          {">_"}
+        </div>
         <div>
-          <h2 className="text-sm font-semibold">
-            {project?.name ?? "Chat"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold">
+              {project?.name ?? "Chat"}
+            </h2>
+            <Badge variant="outline" className="font-mono text-[10px]">
+              sonnet
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground">
             Claude Code Remote Session
           </p>
@@ -49,6 +56,11 @@ export default function ChatPage({
               : "ml-auto"
           }
         >
+          <span
+            className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${
+              isConnected ? "bg-green-500" : "bg-zinc-400"
+            }`}
+          />
           {isConnected ? "Connected" : "Disconnected"}
         </Badge>
       </div>
