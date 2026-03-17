@@ -43,6 +43,8 @@ export function useWebSocket(projectId: string) {
         // 서버가 { type: "message", messages: [...] } 형식으로 전송
         if (data.type === "message" && Array.isArray(data.messages)) {
           for (const msg of data.messages) {
+            // user 메시지는 이미 optimistic update로 추가됐으므로 서버 응답에서 스킵
+            if (msg.role === "user") continue;
             const chatMsg: ChatMessage = {
               id: msg.id,
               role: msg.role,
@@ -54,14 +56,17 @@ export function useWebSocket(projectId: string) {
           }
         } else if (data.id && data.role) {
           // 단일 ChatMessage 형태 (폴백)
-          const chatMsg: ChatMessage = {
-            id: data.id,
-            role: data.role,
-            content: data.content ?? "",
-            timestamp: data.timestamp ?? data.created_at ?? new Date().toISOString(),
-            tool_calls: data.tool_calls,
-          };
-          addMessage(chatMsg);
+          // user 메시지는 이미 optimistic update로 추가됐으므로 서버 응답에서 스킵
+          if (data.role !== "user") {
+            const chatMsg: ChatMessage = {
+              id: data.id,
+              role: data.role,
+              content: data.content ?? "",
+              timestamp: data.timestamp ?? data.created_at ?? new Date().toISOString(),
+              tool_calls: data.tool_calls,
+            };
+            addMessage(chatMsg);
+          }
         }
         setLoading(false);
       } catch {
