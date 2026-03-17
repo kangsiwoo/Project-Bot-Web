@@ -30,7 +30,11 @@ export const useChatStore = create<ChatState>((set) => ({
   selectedModel: "sonnet",
 
   addMessage: (message) =>
-    set((state) => ({ messages: [...state.messages, message] })),
+    set((state) => {
+      // 중복 메시지 방지 (WebSocket 브로드캐스트로 동일 ID가 재수신될 수 있음)
+      if (state.messages.some((m) => m.id === message.id)) return state;
+      return { messages: [...state.messages, message] };
+    }),
 
   updateMessage: (id, updates) =>
     set((state) => ({
