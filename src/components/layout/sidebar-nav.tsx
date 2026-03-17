@@ -14,7 +14,7 @@ import {
 
 const navItems = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/chat", label: "Chat", icon: MessageSquareCode },
+  { href: "/chat", label: "Claude Code", icon: MessageSquareCode },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
