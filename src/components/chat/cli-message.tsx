@@ -9,6 +9,10 @@ import { useChatStore } from "@/stores/chat-store";
 import { LLM_PROVIDERS } from "@/lib/llm-providers";
 import type { ChatMessage } from "@/types";
 import { Terminal, User, Cpu, Zap } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function formatTimestamp(ts: string): string {
   const d = new Date(ts);
@@ -127,15 +131,59 @@ export function CliMessage({ message }: CliMessageProps) {
           </div>
         )}
 
-        {/* 텍스트 응답 */}
+        {/* 텍스트 응답 (마크다운 렌더링) */}
         {message.content && (
           <div className={cn(
             "prose prose-sm dark:prose-invert max-w-none",
             !isCli && "rounded-2xl rounded-tl-sm bg-background border px-4 py-2.5"
           )}>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({ inline, className, children, ...props }: any) {
+                  const match = /language-(\w+)/.exec(className || "");
+                  return !inline && match ? (
+                    <SyntaxHighlighter style={oneDark} language={match[1]} PreTag="div" className="rounded-md my-2 text-sm">
+                      {String(children).replace(/\n$/, "")}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>
+                  );
+                },
+                p({ children }) {
+                  return <p className="mb-2 last:mb-0">{children}</p>;
+                },
+                ul({ children }) {
+                  return <ul className="list-disc pl-4 mb-2">{children}</ul>;
+                },
+                ol({ children }) {
+                  return <ol className="list-decimal pl-4 mb-2">{children}</ol>;
+                },
+                h1({ children }) {
+                  return <h1 className="text-lg font-bold mb-2">{children}</h1>;
+                },
+                h2({ children }) {
+                  return <h2 className="text-base font-bold mb-2">{children}</h2>;
+                },
+                h3({ children }) {
+                  return <h3 className="text-sm font-bold mb-1">{children}</h3>;
+                },
+                blockquote({ children }) {
+                  return <blockquote className="border-l-2 border-muted-foreground/30 pl-3 italic">{children}</blockquote>;
+                },
+                table({ children }) {
+                  return <div className="overflow-x-auto my-2"><table className="min-w-full text-sm border-collapse">{children}</table></div>;
+                },
+                th({ children }) {
+                  return <th className="border-b font-medium px-2 py-1 text-left">{children}</th>;
+                },
+                td({ children }) {
+                  return <td className="border-b px-2 py-1">{children}</td>;
+                },
+              }}
+            >
               {message.content}
-            </p>
+            </ReactMarkdown>
           </div>
         )}
       </div>
