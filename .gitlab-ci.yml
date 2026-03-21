@@ -1,0 +1,48 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  REGISTRY: 192.168.100.30:5050
+  IMAGE: $REGISTRY/kangsiwoo/project-bot-web
+
+test:
+  stage: test
+  image: node:20-alpine
+  before_script:
+    - npm ci
+  script:
+    - npm run lint
+    - npm run build
+  only:
+    - main
+    - merge_requests
+
+build:
+  stage: build
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      command: ["--insecure-registry=192.168.100.30:5050"]
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+  before_script:
+    - docker login -u root -p "$CI_REGISTRY_TOKEN" $REGISTRY
+  script:
+    - docker build -t $IMAGE:$CI_PIPELINE_ID -t $IMAGE:latest .
+    - docker push $IMAGE:$CI_PIPELINE_ID
+    - docker push $IMAGE:latest
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - sed -i "s|IMAGE_TAG|$CI_PIPELINE_ID|g" k8s/deployment.yaml
+    - kubectl apply -f k8s/deployment.yaml
+  only:
+    - main
+  when: manual

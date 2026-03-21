@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-bot-web
+  namespace: prod
+  labels:
+    app: project-bot-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-bot-web
+  template:
+    metadata:
+      labels:
+        app: project-bot-web
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry
+      containers:
+        - name: project-bot-web
+          image: 192.168.100.30:5050/kangsiwoo/project-bot-web:IMAGE_TAG
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://project-bot.prod.svc.cluster.local:8080"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-bot-web
+  namespace: prod
+spec:
+  selector:
+    app: project-bot-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: project-bot-web
+  namespace: prod
+spec:
+  hosts:
+    - "prod.project-bot-web.kangsiwoo.com"
+  gateways:
+    - istio-system/dc-gateway
+  http:
+    - route:
+        - destination:
+            host: project-bot-web.prod.svc.cluster.local
+            port:
+              number: 3000
