@@ -24,13 +24,14 @@ build:
   image: docker:27
   services:
     - name: docker:27-dind
+      entrypoint: ["dockerd-entrypoint.sh"]
       command: ["--insecure-registry=192.168.100.30:5050"]
   variables:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    - sleep 5
-    - echo "$CI_REGISTRY_TOKEN" | docker login -u root --password-stdin http://$REGISTRY
+    - until docker info > /dev/null 2>&1; do sleep 2; done
+    - docker login -u root -p "$CI_REGISTRY_TOKEN" $REGISTRY
   script:
     - docker build -t $IMAGE:$CI_PIPELINE_ID -t $IMAGE:latest .
     - docker push $IMAGE:$CI_PIPELINE_ID
