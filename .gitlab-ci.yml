@@ -29,7 +29,8 @@ build:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    - echo "$CI_REGISTRY_TOKEN" | docker login -u root --password-stdin $REGISTRY
+    - sleep 5
+    - echo "$CI_REGISTRY_TOKEN" | docker login -u root --password-stdin http://$REGISTRY
   script:
     - docker build -t $IMAGE:$CI_PIPELINE_ID -t $IMAGE:latest .
     - docker push $IMAGE:$CI_PIPELINE_ID
