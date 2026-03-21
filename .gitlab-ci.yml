@@ -2,8 +2,7 @@ stages:
   - test
   - build
   - deploy-dev
-  - deploy-staging
-  - deploy-prod
+  - deploy
 
 variables:
   REGISTRY: 192.168.100.30:5050
@@ -54,7 +53,7 @@ deploy-dev:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
 deploy-staging:
-  stage: deploy-staging
+  stage: deploy
   image:
     name: bitnami/kubectl:latest
     entrypoint: [""]
@@ -65,9 +64,10 @@ deploy-staging:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+      allow_failure: true
 
 deploy-prod:
-  stage: deploy-prod
+  stage: deploy
   image:
     name: bitnami/kubectl:latest
     entrypoint: [""]
@@ -78,3 +78,4 @@ deploy-prod:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+      allow_failure: true
