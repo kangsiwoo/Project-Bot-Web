@@ -6,6 +6,7 @@ include:
 variables:
   IMAGE: $REGISTRY/kangsiwoo/project-bot-web
   APP_NAME: project-bot-web
+  APP_PORT: "3000"
 
 test:
   extends: .test-node
