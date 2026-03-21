@@ -15,9 +15,9 @@ test:
   script:
     - npm run lint || true
     - npm run build
-  only:
-    - main
-    - merge_requests
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 build:
   stage: build
@@ -36,8 +36,8 @@ build:
     - docker build -t $IMAGE:$CI_PIPELINE_ID -t $IMAGE:latest .
     - docker push $IMAGE:$CI_PIPELINE_ID
     - docker push $IMAGE:latest
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 deploy:
   stage: deploy
@@ -45,6 +45,5 @@ deploy:
   script:
     - sed -i "s|IMAGE_TAG|$CI_PIPELINE_ID|g" k8s/deployment.yaml
     - kubectl apply -f k8s/deployment.yaml
-  only:
-    - main
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
