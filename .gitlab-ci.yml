@@ -5,6 +5,7 @@ include:
 
 variables:
   IMAGE: $REGISTRY/kangsiwoo/project-bot-web
+  APP_NAME: project-bot-web
 
 test:
   extends: .test-node
