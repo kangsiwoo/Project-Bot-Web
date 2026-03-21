@@ -1,82 +1,27 @@
-stages:
-  - test
-  - build
-  - deploy-dev
-  - deploy-staging
-  - deploy-prod
+include:
+  - project: 'kangsiwoo/ci-templates'
+    file: 'node.yml'
+    ref: main
 
 variables:
-  REGISTRY: 192.168.100.30:5050
   IMAGE: $REGISTRY/kangsiwoo/project-bot-web
 
 test:
-  stage: test
-  image: node:20-alpine
+  extends: .test-node
   before_script:
     - npm ci
   script:
     - npm run lint || true
     - npm run build
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
 
 build:
-  stage: build
-  image: docker:27
-  services:
-    - name: docker:27-dind
-      entrypoint: ["dockerd-entrypoint.sh"]
-      command: ["--insecure-registry=192.168.100.30:5050"]
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-  before_script:
-    - until docker info > /dev/null 2>&1; do sleep 2; done
-    - docker login -u root -p "$CI_REGISTRY_TOKEN" $REGISTRY
-  script:
-    - docker build -t $IMAGE:$CI_PIPELINE_ID -t $IMAGE:latest .
-    - docker push $IMAGE:$CI_PIPELINE_ID
-    - docker push $IMAGE:latest
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  extends: .build
 
 deploy-dev:
-  stage: deploy-dev
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
-  script:
-    - sed "s|IMAGE_TAG|$CI_PIPELINE_ID|g; s|NAMESPACE|dev|g" k8s/deployment.yaml | kubectl apply -f -
-  environment:
-    name: dev
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  extends: .deploy-dev
 
 deploy-staging:
-  stage: deploy-staging
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
-  script:
-    - sed "s|IMAGE_TAG|$CI_PIPELINE_ID|g; s|NAMESPACE|staging|g" k8s/deployment.yaml | kubectl apply -f -
-  environment:
-    name: staging
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: false
+  extends: .deploy-staging
 
 deploy-prod:
-  stage: deploy-prod
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
-  script:
-    - sed "s|IMAGE_TAG|$CI_PIPELINE_ID|g; s|NAMESPACE|prod|g" k8s/deployment.yaml | kubectl apply -f -
-  environment:
-    name: production
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: false
+  extends: .deploy-prod
