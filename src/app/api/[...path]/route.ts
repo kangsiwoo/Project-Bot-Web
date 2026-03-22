@@ -9,10 +9,14 @@ async function handler(
 ) {
   const { path } = await params;
   const targetPath = `/api/${path.join("/")}`;
-  const url = `${BACKEND_URL}${targetPath}`;
+  const searchParams = req.nextUrl.searchParams.toString();
+  const url = `${BACKEND_URL}${targetPath}${searchParams ? `?${searchParams}` : ""}`;
 
-  const headers = new Headers(req.headers);
-  headers.delete("host");
+  const headers: Record<string, string> = {};
+  const auth = req.headers.get("authorization");
+  if (auth) headers["authorization"] = auth;
+  const contentType = req.headers.get("content-type");
+  if (contentType) headers["content-type"] = contentType;
 
   const res = await fetch(url, {
     method: req.method,
