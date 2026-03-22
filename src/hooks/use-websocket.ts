@@ -7,7 +7,14 @@ import { getAccessToken } from "@/lib/auth";
 import { useChatStore } from "@/stores/chat-store";
 import type { ChatMessage } from "@/types";
 
-const WS_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/^http/, "ws") || "ws://localhost:8080";
+// 브라우저에서 현재 호스트 기반으로 WS URL 생성 (project-bot-web → project-bot)
+function getWsBase(): string {
+  if (typeof window === "undefined") return "ws://localhost:8080";
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host.replace("project-bot-web", "project-bot");
+  return `${proto}//${host}`;
+}
+const WS_BASE = getWsBase();
 
 function generateWsRid(): string {
   return "ws-" + Math.random().toString(36).substring(2, 8);
