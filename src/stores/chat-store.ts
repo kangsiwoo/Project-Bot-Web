@@ -14,9 +14,11 @@ interface ChatState {
   selectedChannelId: string | null;
   streamingContent: string;
   streamingMessageId: string | null;
+  hasMoreMessages: boolean;
 
   // 액션
   addMessage: (message: ChatMessage) => void;
+  prependMessages: (messages: ChatMessage[]) => void;
   updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
   setConnected: (connected: boolean) => void;
   setLoading: (loading: boolean) => void;
@@ -24,6 +26,7 @@ interface ChatState {
   setProvider: (provider: ProviderId) => void;
   setModel: (model: string) => void;
   setSelectedChannelId: (id: string | null) => void;
+  setHasMoreMessages: (v: boolean) => void;
   startStream: () => void;
   appendStreamContent: (content: string) => void;
   clearStream: () => void;
@@ -38,6 +41,7 @@ export const useChatStore = create<ChatState>((set) => ({
   selectedChannelId: null,
   streamingContent: "",
   streamingMessageId: null,
+  hasMoreMessages: false,
 
   addMessage: (message) =>
     set((state) => {
@@ -57,7 +61,12 @@ export const useChatStore = create<ChatState>((set) => ({
 
   setLoading: (loading) => set({ isLoading: loading }),
 
-  clearMessages: () => set({ messages: [] }),
+  prependMessages: (messages) =>
+    set((state) => ({
+      messages: [...messages, ...state.messages],
+    })),
+
+  clearMessages: () => set({ messages: [], hasMoreMessages: false }),
 
   setProvider: (provider) =>
     set({ selectedProvider: provider, selectedModel: getDefaultModel(provider) }),
@@ -65,6 +74,8 @@ export const useChatStore = create<ChatState>((set) => ({
   setModel: (model) => set({ selectedModel: model }),
 
   setSelectedChannelId: (id) => set({ selectedChannelId: id }),
+
+  setHasMoreMessages: (v) => set({ hasMoreMessages: v }),
 
   startStream: () =>
     set({

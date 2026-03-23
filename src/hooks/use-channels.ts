@@ -26,14 +26,41 @@ export function useChannels(projectId: string) {
   });
 }
 
+interface MessagesResponse {
+  messages: ChannelMessage[];
+  has_more: boolean;
+}
+
 export function useChannelMessages(projectId: string, channelId: string) {
   return useQuery({
     queryKey: ["channel-messages", channelId],
     queryFn: () =>
-      api<ChannelMessage[]>(
+      api<MessagesResponse>(
         `/api/projects/${projectId}/channels/${channelId}/messages`
       ),
     enabled: !!projectId && !!channelId,
+  });
+}
+
+export function useLoadMoreMessages(projectId: string, channelId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (beforeId: string) =>
+      api<MessagesResponse>(
+        `/api/projects/${projectId}/channels/${channelId}/messages?before=${beforeId}`
+      ),
+    onSuccess: (data) => {
+      queryClient.setQueryData<MessagesResponse>(
+        ["channel-messages", channelId],
+        (old) => {
+          if (!old) return data;
+          return {
+            messages: [...data.messages, ...old.messages],
+            has_more: data.has_more,
+          };
+        }
+      );
+    },
   });
 }
 
@@ -62,4 +89,4 @@ export function useDeleteChannel(projectId: string) {
   });
 }
 
-export type { ProjectChannel, ChannelMessage };
+export type { ProjectChannel, ChannelMessage, MessagesResponse };

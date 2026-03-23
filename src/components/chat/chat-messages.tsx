@@ -2,21 +2,29 @@
 
 // 채팅 메시지 목록 - 자동 스크롤
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useChatStore } from "@/stores/chat-store";
 import { LLM_PROVIDERS } from "@/lib/llm-providers";
 import { CliMessage } from "./cli-message";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Terminal, Zap, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function ChatMessages() {
+interface ChatMessagesProps {
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+}
+
+export function ChatMessages({ onLoadMore, hasMore, isLoadingMore }: ChatMessagesProps) {
   const messages = useChatStore((s) => s.messages);
   const isLoading = useChatStore((s) => s.isLoading);
   const selectedProvider = useChatStore((s) => s.selectedProvider);
   const streamingContent = useChatStore((s) => s.streamingContent);
   const streamingMessageId = useChatStore((s) => s.streamingMessageId);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef<number>(0);
+  const isLoadingMoreRef = useRef(false);
 
   const provider = LLM_PROVIDERS[selectedProvider];
 
@@ -48,14 +56,54 @@ export function ChatMessages() {
         ? "text-amber-500"
         : "text-emerald-500";
 
-  // 새 메시지 또는 스트리밍 콘텐츠 도착 시 자동 스크롤
+  // Maintain scroll position after prepending older messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isLoadingMoreRef.current && scrollContainerRef.current) {
+      const newScrollHeight = scrollContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+      scrollContainerRef.current.scrollTop = scrollDiff;
+      isLoadingMoreRef.current = false;
+    }
+  }, [messages]);
+
+  // Save scroll height before loading more and trigger load
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onLoadMore || !hasMore || isLoadingMore) return;
+
+    if (container.scrollTop < 50) {
+      prevScrollHeightRef.current = container.scrollHeight;
+      isLoadingMoreRef.current = true;
+      onLoadMore();
+    }
+  }, [onLoadMore, hasMore, isLoadingMore]);
+
+  // Attach scroll listener
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  // 새 메시지 또는 스트리밍 콘텐츠 도착 시 자동 스크롤 (only when not loading older)
+  useEffect(() => {
+    if (!isLoadingMoreRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isLoading, streamingContent]);
 
   return (
-    <ScrollArea className="flex-1">
+    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
       <div className="divide-y">
+        {/* Loading spinner for older messages */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center py-3">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-xs text-muted-foreground">Loading older messages...</span>
+          </div>
+        )}
+
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <div
@@ -113,6 +161,6 @@ export function ChatMessages() {
         )}
       </div>
       <div ref={bottomRef} />
-    </ScrollArea>
+    </div>
   );
 }

@@ -6,7 +6,7 @@ import { use, useEffect } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useChatStore } from "@/stores/chat-store";
 import { useProject } from "@/hooks/use-projects";
-import { useChannels, useChannelMessages } from "@/hooks/use-channels";
+import { useChannels, useChannelMessages, useLoadMoreMessages } from "@/hooks/use-channels";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -41,10 +41,16 @@ export default function ChatPage({
   const isConnected = useChatStore((s) => s.isConnected);
   const clearMessages = useChatStore((s) => s.clearMessages);
   const addMessage = useChatStore((s) => s.addMessage);
+  const messages = useChatStore((s) => s.messages);
+  const prependMessages = useChatStore((s) => s.prependMessages);
+  const setHasMoreMessages = useChatStore((s) => s.setHasMoreMessages);
   const selectedProvider = useChatStore((s) => s.selectedProvider);
   const selectedModel = useChatStore((s) => s.selectedModel);
   const setProvider = useChatStore((s) => s.setProvider);
   const setModel = useChatStore((s) => s.setModel);
+
+  const loadMore = useLoadMoreMessages(projectId, selectedChannelId ?? "");
+  const hasMore = history?.has_more ?? false;
 
   const currentProvider = LLM_PROVIDERS[selectedProvider];
 
@@ -59,9 +65,9 @@ export default function ChatPage({
   // Load history when channel changes
   useEffect(() => {
     clearMessages();
-    if (history && history.length > 0) {
+    if (history && history.messages && history.messages.length > 0) {
       // history는 최신순이므로 reverse해서 오래된 순으로 추가
-      const sorted = [...history].reverse();
+      const sorted = [...history.messages].reverse();
       for (const msg of sorted) {
         addMessage({
           id: String(msg.id),
@@ -70,8 +76,9 @@ export default function ChatPage({
           timestamp: msg.created_at,
         });
       }
+      setHasMoreMessages(history.has_more);
     }
-  }, [selectedChannelId, history, clearMessages, addMessage]);
+  }, [selectedChannelId, history, clearMessages, addMessage, setHasMoreMessages]);
 
   // 페이지 전환 시 메시지 초기화 및 채널 선택 리셋
   useEffect(() => {
@@ -80,6 +87,27 @@ export default function ChatPage({
       setSelectedChannelId(null);
     };
   }, [projectId, clearMessages, setSelectedChannelId]);
+
+  // Prepend older messages when loadMore succeeds
+  useEffect(() => {
+    if (loadMore.isSuccess && loadMore.data) {
+      const sorted = [...loadMore.data.messages].reverse();
+      const chatMessages = sorted.map((msg) => ({
+        id: String(msg.id),
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+        timestamp: msg.created_at,
+      }));
+      prependMessages(chatMessages);
+      setHasMoreMessages(loadMore.data.has_more);
+    }
+  }, [loadMore.isSuccess, loadMore.data, prependMessages, setHasMoreMessages]);
+
+  const handleLoadMore = () => {
+    if (messages.length > 0 && !loadMore.isPending) {
+      loadMore.mutate(messages[0].id);
+    }
+  };
 
   const handleSelectChannel = (channelId: string) => {
     if (channelId !== selectedChannelId) {
@@ -186,7 +214,11 @@ export default function ChatPage({
       <Separator />
 
       {/* 메시지 영역 */}
-      <ChatMessages />
+      <ChatMessages
+        onLoadMore={handleLoadMore}
+        hasMore={hasMore}
+        isLoadingMore={loadMore.isPending}
+      />
 
       {/* 입력 바 */}
       <ChatInput onSend={sendMessage} />
