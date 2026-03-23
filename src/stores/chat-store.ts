@@ -12,6 +12,8 @@ interface ChatState {
   selectedProvider: ProviderId;
   selectedModel: string;
   selectedChannelId: string | null;
+  streamingContent: string;
+  streamingMessageId: string | null;
 
   // 액션
   addMessage: (message: ChatMessage) => void;
@@ -22,6 +24,9 @@ interface ChatState {
   setProvider: (provider: ProviderId) => void;
   setModel: (model: string) => void;
   setSelectedChannelId: (id: string | null) => void;
+  startStream: () => void;
+  appendStreamContent: (content: string) => void;
+  clearStream: () => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -31,6 +36,8 @@ export const useChatStore = create<ChatState>((set) => ({
   selectedProvider: "claude_code",
   selectedModel: "sonnet",
   selectedChannelId: null,
+  streamingContent: "",
+  streamingMessageId: null,
 
   addMessage: (message) =>
     set((state) => {
@@ -58,4 +65,18 @@ export const useChatStore = create<ChatState>((set) => ({
   setModel: (model) => set({ selectedModel: model }),
 
   setSelectedChannelId: (id) => set({ selectedChannelId: id }),
+
+  startStream: () =>
+    set({
+      streamingMessageId: `streaming-${crypto.randomUUID()}`,
+      streamingContent: "",
+    }),
+
+  appendStreamContent: (content) =>
+    set((state) => ({
+      streamingContent: state.streamingContent + content,
+    })),
+
+  clearStream: () =>
+    set({ streamingContent: "", streamingMessageId: null }),
 }));

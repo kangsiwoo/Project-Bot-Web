@@ -14,6 +14,8 @@ export function ChatMessages() {
   const messages = useChatStore((s) => s.messages);
   const isLoading = useChatStore((s) => s.isLoading);
   const selectedProvider = useChatStore((s) => s.selectedProvider);
+  const streamingContent = useChatStore((s) => s.streamingContent);
+  const streamingMessageId = useChatStore((s) => s.streamingMessageId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const provider = LLM_PROVIDERS[selectedProvider];
@@ -46,10 +48,10 @@ export function ChatMessages() {
         ? "text-amber-500"
         : "text-emerald-500";
 
-  // 새 메시지 도착 시 자동 스크롤
+  // 새 메시지 또는 스트리밍 콘텐츠 도착 시 자동 스크롤
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingContent]);
 
   return (
     <ScrollArea className="flex-1">
@@ -77,8 +79,21 @@ export function ChatMessages() {
           <CliMessage key={msg.id} message={msg} />
         ))}
 
+        {/* 스트리밍 메시지 표시 */}
+        {streamingMessageId && streamingContent && (
+          <CliMessage
+            key={streamingMessageId}
+            message={{
+              id: streamingMessageId,
+              role: "assistant",
+              content: streamingContent,
+              timestamp: new Date().toISOString(),
+            }}
+          />
+        )}
+
         {/* 작업 중 인디케이터 */}
-        {isLoading && (
+        {isLoading && !streamingMessageId && (
           <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
             <div
               className={cn(

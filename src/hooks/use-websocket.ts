@@ -47,8 +47,23 @@ export function useWebSocket(projectId: string, channelId?: string | null) {
         const data = JSON.parse(event.data);
         console.log(`[${rid}] ${new Date().toISOString()} RECV`, data);
 
+        // 스트리밍 청크 처리
+        if (data.type === "stream" && data.content) {
+          const { streamingMessageId, startStream, appendStreamContent } =
+            useChatStore.getState();
+          if (!streamingMessageId) {
+            startStream();
+          }
+          appendStreamContent(data.content);
+          return;
+        }
+
         // 서버가 { type: "message", messages: [...] } 형식으로 전송
         if (data.type === "message" && Array.isArray(data.messages)) {
+          // 스트리밍 완료 — 최종 메시지 도착 시 스트림 초기화
+          const { clearStream } = useChatStore.getState();
+          clearStream();
+
           for (const msg of data.messages) {
             // user 메시지는 이미 optimistic update로 추가됐으므로 서버 응답에서 스킵
             if (msg.role === "user") continue;
