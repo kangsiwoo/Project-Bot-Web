@@ -6,7 +6,7 @@ import { use, useEffect } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useChatStore } from "@/stores/chat-store";
 import { useProject } from "@/hooks/use-projects";
-import { useChannels } from "@/hooks/use-channels";
+import { useChannels, useChannelMessages } from "@/hooks/use-channels";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
@@ -36,9 +36,11 @@ export default function ChatPage({
   const { data: channels } = useChannels(projectId);
   const selectedChannelId = useChatStore((s) => s.selectedChannelId);
   const setSelectedChannelId = useChatStore((s) => s.setSelectedChannelId);
+  const { data: history } = useChannelMessages(projectId, selectedChannelId ?? "");
   const { sendMessage } = useWebSocket(projectId, selectedChannelId);
   const isConnected = useChatStore((s) => s.isConnected);
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const addMessage = useChatStore((s) => s.addMessage);
   const selectedProvider = useChatStore((s) => s.selectedProvider);
   const selectedModel = useChatStore((s) => s.selectedModel);
   const setProvider = useChatStore((s) => s.setProvider);
@@ -54,10 +56,22 @@ export default function ChatPage({
     }
   }, [channels, selectedChannelId, setSelectedChannelId]);
 
-  // Clear messages when channel or project changes
+  // Load history when channel changes
   useEffect(() => {
     clearMessages();
-  }, [selectedChannelId, clearMessages]);
+    if (history && history.length > 0) {
+      // history는 최신순이므로 reverse해서 오래된 순으로 추가
+      const sorted = [...history].reverse();
+      for (const msg of sorted) {
+        addMessage({
+          id: String(msg.id),
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          timestamp: msg.created_at,
+        });
+      }
+    }
+  }, [selectedChannelId, history, clearMessages, addMessage]);
 
   // 페이지 전환 시 메시지 초기화 및 채널 선택 리셋
   useEffect(() => {
