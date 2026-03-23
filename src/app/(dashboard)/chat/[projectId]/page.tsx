@@ -6,8 +6,10 @@ import { use, useEffect } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useChatStore } from "@/stores/chat-store";
 import { useProject } from "@/hooks/use-projects";
+import { useChannels } from "@/hooks/use-channels";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
+import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -30,8 +32,11 @@ export default function ChatPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = use(params);
-  const { sendMessage } = useWebSocket(projectId);
   const { data: project } = useProject(projectId);
+  const { data: channels } = useChannels(projectId);
+  const selectedChannelId = useChatStore((s) => s.selectedChannelId);
+  const setSelectedChannelId = useChatStore((s) => s.setSelectedChannelId);
+  const { sendMessage } = useWebSocket(projectId, selectedChannelId);
   const isConnected = useChatStore((s) => s.isConnected);
   const clearMessages = useChatStore((s) => s.clearMessages);
   const selectedProvider = useChatStore((s) => s.selectedProvider);
@@ -41,13 +46,44 @@ export default function ChatPage({
 
   const currentProvider = LLM_PROVIDERS[selectedProvider];
 
-  // 페이지 전환 시 메시지 초기화
+  // Auto-select first channel (prefer console) when channels load
   useEffect(() => {
-    return () => clearMessages();
-  }, [projectId, clearMessages]);
+    if (channels && channels.length > 0 && !selectedChannelId) {
+      const consoleChannel = channels.find((ch) => ch.is_console);
+      setSelectedChannelId(consoleChannel?.id ?? channels[0].id);
+    }
+  }, [channels, selectedChannelId, setSelectedChannelId]);
+
+  // Clear messages when channel or project changes
+  useEffect(() => {
+    clearMessages();
+  }, [selectedChannelId, clearMessages]);
+
+  // 페이지 전환 시 메시지 초기화 및 채널 선택 리셋
+  useEffect(() => {
+    return () => {
+      clearMessages();
+      setSelectedChannelId(null);
+    };
+  }, [projectId, clearMessages, setSelectedChannelId]);
+
+  const handleSelectChannel = (channelId: string) => {
+    if (channelId !== selectedChannelId) {
+      setSelectedChannelId(channelId);
+    }
+  };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full">
+      {/* Channel Sidebar */}
+      <ChannelSidebar
+        projectId={projectId}
+        selectedChannelId={selectedChannelId}
+        onSelectChannel={handleSelectChannel}
+      />
+
+      {/* Chat Area */}
+      <div className="flex flex-1 flex-col">
       {/* 헤더 */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-mono text-xs font-bold">
@@ -140,6 +176,7 @@ export default function ChatPage({
 
       {/* 입력 바 */}
       <ChatInput onSend={sendMessage} />
+      </div>
     </div>
   );
 }

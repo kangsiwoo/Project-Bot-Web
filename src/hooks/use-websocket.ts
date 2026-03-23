@@ -20,7 +20,7 @@ function generateWsRid(): string {
   return "ws-" + Math.random().toString(36).substring(2, 8);
 }
 
-export function useWebSocket(projectId: string) {
+export function useWebSocket(projectId: string, channelId?: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
   const ridRef = useRef<string>("");
   const addMessage = useChatStore((s) => s.addMessage);
@@ -113,10 +113,12 @@ export function useWebSocket(projectId: string) {
       });
 
       setLoading(true);
+      const { selectedChannelId } = useChatStore.getState();
       const payload = JSON.stringify({
         content,
         provider: selectedProvider,
         model: selectedModel,
+        ...(selectedChannelId ? { channel_id: selectedChannelId } : {}),
       });
       console.log(`[${ridRef.current}] ${new Date().toISOString()} SEND ${payload}`);
       wsRef.current.send(payload);

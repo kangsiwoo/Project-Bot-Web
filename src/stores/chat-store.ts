@@ -11,6 +11,7 @@ interface ChatState {
   isLoading: boolean;
   selectedProvider: ProviderId;
   selectedModel: string;
+  selectedChannelId: string | null;
 
   // 액션
   addMessage: (message: ChatMessage) => void;
@@ -20,6 +21,7 @@ interface ChatState {
   clearMessages: () => void;
   setProvider: (provider: ProviderId) => void;
   setModel: (model: string) => void;
+  setSelectedChannelId: (id: string | null) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -28,6 +30,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isLoading: false,
   selectedProvider: "claude_code",
   selectedModel: "sonnet",
+  selectedChannelId: null,
 
   addMessage: (message) =>
     set((state) => {
@@ -53,4 +56,6 @@ export const useChatStore = create<ChatState>((set) => ({
     set({ selectedProvider: provider, selectedModel: getDefaultModel(provider) }),
 
   setModel: (model) => set({ selectedModel: model }),
+
+  setSelectedChannelId: (id) => set({ selectedChannelId: id }),
 }));
