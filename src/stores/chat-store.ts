@@ -2,14 +2,13 @@
 
 import { create } from "zustand";
 import type { ChatMessage } from "@/types";
-import type { ProviderId } from "@/lib/llm-providers";
-import { getDefaultModel } from "@/lib/llm-providers";
+import { FALLBACK_PROVIDERS, getDefaultModel } from "@/lib/llm-providers";
 
 interface ChatState {
   messages: ChatMessage[];
   isConnected: boolean;
   isLoading: boolean;
-  selectedProvider: ProviderId;
+  selectedProvider: string;
   selectedModel: string;
   selectedChannelId: string | null;
   streamingContent: string;
@@ -23,7 +22,7 @@ interface ChatState {
   setConnected: (connected: boolean) => void;
   setLoading: (loading: boolean) => void;
   clearMessages: () => void;
-  setProvider: (provider: ProviderId) => void;
+  setProvider: (provider: string) => void;
   setModel: (model: string) => void;
   setSelectedChannelId: (id: string | null) => void;
   setHasMoreMessages: (v: boolean) => void;
@@ -69,7 +68,7 @@ export const useChatStore = create<ChatState>((set) => ({
   clearMessages: () => set({ messages: [], hasMoreMessages: false }),
 
   setProvider: (provider) =>
-    set({ selectedProvider: provider, selectedModel: getDefaultModel(provider) }),
+    set({ selectedProvider: provider, selectedModel: getDefaultModel(FALLBACK_PROVIDERS, provider) }),
 
   setModel: (model) => set({ selectedModel: model }),
 

@@ -2,18 +2,20 @@
 
 // Claude Code Remote 채팅 페이지
 
-import { use, useEffect } from "react";
+import { use, useEffect, useMemo } from "react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useChatStore } from "@/stores/chat-store";
 import { useProject } from "@/hooks/use-projects";
 import { useChannels, useChannelMessages, useLoadMoreMessages } from "@/hooks/use-channels";
+import { useModels } from "@/hooks/use-models";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ModelSelector } from "@/components/chat/model-selector";
-import { LLM_PROVIDERS } from "@/lib/llm-providers";
+import { FALLBACK_PROVIDERS } from "@/lib/llm-providers";
+import type { LLMProvider } from "@/lib/llm-providers";
 
 export default function ChatPage({
   params,
@@ -23,6 +25,7 @@ export default function ChatPage({
   const { projectId } = use(params);
   const { data: project } = useProject(projectId);
   const { data: channels } = useChannels(projectId);
+  const { data: modelsData } = useModels();
   const selectedChannelId = useChatStore((s) => s.selectedChannelId);
   const setSelectedChannelId = useChatStore((s) => s.setSelectedChannelId);
   const { data: history } = useChannelMessages(projectId, selectedChannelId ?? "");
@@ -41,7 +44,22 @@ export default function ChatPage({
   const loadMore = useLoadMoreMessages(projectId, selectedChannelId ?? "");
   const hasMore = history?.has_more ?? false;
 
-  const currentProvider = LLM_PROVIDERS[selectedProvider];
+  // Convert API response to Record<string, LLMProvider> format, fallback if unavailable
+  const providers = useMemo<Record<string, LLMProvider>>(() => {
+    if (!modelsData || modelsData.length === 0) return FALLBACK_PROVIDERS;
+    const map: Record<string, LLMProvider> = {};
+    for (const item of modelsData) {
+      map[item.key] = {
+        name: item.name,
+        icon: item.icon,
+        description: item.description,
+        models: item.models,
+      };
+    }
+    return map;
+  }, [modelsData]);
+
+  const currentProvider = providers[selectedProvider] ?? FALLBACK_PROVIDERS["claude_code"];
 
   // Auto-select first channel (prefer console) when channels load
   useEffect(() => {
@@ -128,6 +146,7 @@ export default function ChatPage({
 
             {/* 프로바이더 & 모델 선택 */}
             <ModelSelector
+              providers={providers}
               selectedProvider={selectedProvider}
               selectedModel={selectedModel}
               onProviderChange={setProvider}

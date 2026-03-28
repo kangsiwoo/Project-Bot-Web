@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { LLM_PROVIDERS, PROVIDER_IDS } from "@/lib/llm-providers";
-import type { ProviderId, LLMModel } from "@/lib/llm-providers";
+import type { LLMModel, LLMProvider } from "@/lib/llm-providers";
 
 interface ModelSelectorProps {
-  selectedProvider: ProviderId;
+  providers: Record<string, LLMProvider>;
+  selectedProvider: string;
   selectedModel: string;
-  onProviderChange: (provider: ProviderId) => void;
+  onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
 }
 
 export function ModelSelector({
+  providers,
   selectedProvider,
   selectedModel,
   onProviderChange,
@@ -20,11 +21,13 @@ export function ModelSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredModel, setHoveredModel] = useState<{
     model: LLMModel;
-    providerId: ProviderId;
+    providerId: string;
     top: number;
   } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const providerIds = Object.keys(providers);
 
   // Click outside to close
   useEffect(() => {
@@ -46,10 +49,12 @@ export function ModelSelector({
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  const currentProvider = LLM_PROVIDERS[selectedProvider];
-  const currentModel = currentProvider.models.find(
+  const currentProvider = providers[selectedProvider];
+  const currentModel = currentProvider?.models.find(
     (m) => m.id === selectedModel
   );
+
+  if (!currentProvider) return null;
 
   return (
     <div ref={ref} className="relative">
@@ -84,8 +89,8 @@ export function ModelSelector({
         <div className="absolute top-full left-0 mt-1 z-50 flex items-start">
           {/* Menu Panel */}
           <div ref={menuRef} className="relative w-56 rounded-lg border border-border bg-popover p-1 shadow-lg">
-            {PROVIDER_IDS.map((pid) => {
-              const provider = LLM_PROVIDERS[pid];
+            {providerIds.map((pid) => {
+              const provider = providers[pid];
               return (
                 <div key={pid} className="mb-0.5">
                   {/* Provider Header */}
@@ -156,7 +161,7 @@ export function ModelSelector({
             >
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span className="flex h-4 w-4 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-[9px] font-bold leading-none">
-                  {LLM_PROVIDERS[hoveredModel.providerId].icon}
+                  {providers[hoveredModel.providerId].icon}
                 </span>
                 <p className="text-xs font-semibold">
                   {hoveredModel.model.name}

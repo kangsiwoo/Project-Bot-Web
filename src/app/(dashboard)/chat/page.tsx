@@ -4,7 +4,7 @@
 
 import { useProjects } from "@/hooks/use-projects";
 import { useChatStore } from "@/stores/chat-store";
-import { LLM_PROVIDERS } from "@/lib/llm-providers";
+import { FALLBACK_PROVIDERS } from "@/lib/llm-providers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageSquareCode, Terminal, FolderKanban } from "lucide-react";
@@ -14,7 +14,7 @@ export default function ChatListPage() {
   const { data: projects, isLoading } = useProjects();
   const selectedProvider = useChatStore((s) => s.selectedProvider);
   const selectedModel = useChatStore((s) => s.selectedModel);
-  const provider = LLM_PROVIDERS[selectedProvider];
+  const provider = FALLBACK_PROVIDERS[selectedProvider];
 
   return (
     <div className="p-6 space-y-6">

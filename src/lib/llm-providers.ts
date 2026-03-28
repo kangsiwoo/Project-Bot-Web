@@ -1,6 +1,6 @@
 // LLM 프로바이더 설정
 
-export type ProviderId = "claude_code";
+export type ProviderId = string; // dynamic now
 
 export interface LLMModel {
   id: string;
@@ -15,7 +15,8 @@ export interface LLMProvider {
   description: string;
 }
 
-export const LLM_PROVIDERS: Record<ProviderId, LLMProvider> = {
+// Fallback when API is not available
+export const FALLBACK_PROVIDERS: Record<string, LLMProvider> = {
   claude_code: {
     name: "Claude Code",
     icon: ">_",
@@ -28,8 +29,7 @@ export const LLM_PROVIDERS: Record<ProviderId, LLMProvider> = {
   },
 };
 
-export const PROVIDER_IDS = Object.keys(LLM_PROVIDERS) as ProviderId[];
-
-export function getDefaultModel(providerId: ProviderId): string {
-  return LLM_PROVIDERS[providerId].models[0].id;
+export function getDefaultModel(providers: Record<string, LLMProvider>, providerId: string): string {
+  const provider = providers[providerId];
+  return provider?.models[0]?.id ?? "sonnet";
 }

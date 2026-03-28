@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useChatStore } from "@/stores/chat-store";
-import { LLM_PROVIDERS } from "@/lib/llm-providers";
+import { FALLBACK_PROVIDERS } from "@/lib/llm-providers";
 import { CliMessage } from "./cli-message";
 import { Loader2, Terminal, Zap, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export function ChatMessages({ onLoadMore, hasMore, isLoadingMore }: ChatMessage
   const prevScrollHeightRef = useRef<number>(0);
   const isLoadingMoreRef = useRef(false);
 
-  const provider = LLM_PROVIDERS[selectedProvider];
+  const provider = FALLBACK_PROVIDERS[selectedProvider];
 
   const LoadingIcon =
     selectedProvider === "claude_code"

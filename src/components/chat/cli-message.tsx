@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ToolCallBlock } from "./tool-call-block";
 import { useChatStore } from "@/stores/chat-store";
-import { LLM_PROVIDERS } from "@/lib/llm-providers";
+import { FALLBACK_PROVIDERS } from "@/lib/llm-providers";
 import type { ChatMessage } from "@/types";
 import { Terminal, User, Cpu, Zap } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -28,7 +28,7 @@ export function CliMessage({ message }: CliMessageProps) {
   const isAssistant = message.role === "assistant";
   const selectedProvider = useChatStore((s) => s.selectedProvider);
   const selectedModel = useChatStore((s) => s.selectedModel);
-  const provider = LLM_PROVIDERS[selectedProvider];
+  const provider = FALLBACK_PROVIDERS[selectedProvider];
 
   // 도구 호출의 총 실행 시간 계산
   const totalDuration = message.tool_calls?.reduce(
