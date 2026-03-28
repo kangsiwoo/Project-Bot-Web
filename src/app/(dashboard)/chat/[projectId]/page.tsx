@@ -73,9 +73,7 @@ export default function ChatPage({
   useEffect(() => {
     clearMessages();
     if (history && history.messages && history.messages.length > 0) {
-      // history는 최신순이므로 reverse해서 오래된 순으로 추가
-      const sorted = [...history.messages].reverse();
-      for (const msg of sorted) {
+      for (const msg of history.messages) {
         addMessage({
           id: String(msg.id),
           role: msg.role as "user" | "assistant",
@@ -98,8 +96,7 @@ export default function ChatPage({
   // Prepend older messages when loadMore succeeds
   useEffect(() => {
     if (loadMore.isSuccess && loadMore.data) {
-      const sorted = [...loadMore.data.messages].reverse();
-      const chatMessages = sorted.map((msg) => ({
+      const chatMessages = loadMore.data.messages.map((msg) => ({
         id: String(msg.id),
         role: msg.role as "user" | "assistant",
         content: msg.content,
