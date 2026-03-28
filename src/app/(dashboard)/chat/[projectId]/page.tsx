@@ -12,19 +12,8 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
 import { LLM_PROVIDERS, PROVIDER_IDS } from "@/lib/llm-providers";
 import type { ProviderId } from "@/lib/llm-providers";
-import { ChevronDown } from "lucide-react";
 
 export default function ChatPage({
   params,
@@ -137,58 +126,31 @@ export default function ChatPage({
               {project?.name ?? "Chat"}
             </h2>
 
-            {/* 프로바이더 선택 드롭다운 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-mono font-medium hover:bg-accent transition-colors cursor-pointer">
-                {currentProvider.icon} {currentProvider.name}
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" sideOffset={4}>
-                <DropdownMenuLabel>LLM Provider</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {PROVIDER_IDS.map((id) => {
-                  const provider = LLM_PROVIDERS[id];
-                  return (
-                    <DropdownMenuItem
-                      key={id}
-                      className={selectedProvider === id ? "bg-accent" : ""}
-                      onClick={() => setProvider(id)}
-                    >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-muted font-mono text-[10px] font-bold shrink-0">
-                        {provider.icon}
-                      </span>
-                      <div className="flex flex-col">
-                        <span className="text-sm">{provider.name}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {provider.description}
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* 프로바이더 선택 */}
+            <select
+              value={selectedProvider}
+              onChange={(e) => setProvider(e.target.value as ProviderId)}
+              className="rounded-md border bg-transparent px-2 py-0.5 text-[10px] font-mono font-medium cursor-pointer outline-none"
+            >
+              {PROVIDER_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {LLM_PROVIDERS[id].icon} {LLM_PROVIDERS[id].name}
+                </option>
+              ))}
+            </select>
 
-            {/* 모델 선택 드롭다운 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-mono font-medium hover:bg-accent transition-colors cursor-pointer">
-                {selectedModel}
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" sideOffset={4}>
-                <DropdownMenuLabel>Model</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {currentProvider.models.map((model) => (
-                  <DropdownMenuItem
-                    key={model}
-                    className={selectedModel === model ? "bg-accent" : ""}
-                    onClick={() => setModel(model)}
-                  >
-                    <span className="font-mono text-xs">{model}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* 모델 선택 */}
+            <select
+              value={selectedModel}
+              onChange={(e) => setModel(e.target.value)}
+              className="rounded-md border bg-transparent px-2 py-0.5 text-[10px] font-mono font-medium cursor-pointer outline-none"
+            >
+              {currentProvider.models.map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
           </div>
           <p className="text-xs text-muted-foreground">
             {currentProvider.description}
