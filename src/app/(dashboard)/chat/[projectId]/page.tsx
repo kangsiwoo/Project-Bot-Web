@@ -12,8 +12,8 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { ChannelSidebar } from "@/components/chat/channel-sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { LLM_PROVIDERS, PROVIDER_IDS } from "@/lib/llm-providers";
-import type { ProviderId } from "@/lib/llm-providers";
+import { ModelSelector } from "@/components/chat/model-selector";
+import { LLM_PROVIDERS } from "@/lib/llm-providers";
 
 export default function ChatPage({
   params,
@@ -126,31 +126,13 @@ export default function ChatPage({
               {project?.name ?? "Chat"}
             </h2>
 
-            {/* 프로바이더 선택 */}
-            <select
-              value={selectedProvider}
-              onChange={(e) => setProvider(e.target.value as ProviderId)}
-              className="rounded-md border bg-transparent px-2 py-0.5 text-[10px] font-mono font-medium cursor-pointer outline-none"
-            >
-              {PROVIDER_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {LLM_PROVIDERS[id].icon} {LLM_PROVIDERS[id].name}
-                </option>
-              ))}
-            </select>
-
-            {/* 모델 선택 */}
-            <select
-              value={selectedModel}
-              onChange={(e) => setModel(e.target.value)}
-              className="rounded-md border bg-transparent px-2 py-0.5 text-[10px] font-mono font-medium cursor-pointer outline-none"
-            >
-              {currentProvider.models.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
+            {/* 프로바이더 & 모델 선택 */}
+            <ModelSelector
+              selectedProvider={selectedProvider}
+              selectedModel={selectedModel}
+              onProviderChange={setProvider}
+              onModelChange={setModel}
+            />
           </div>
           <p className="text-xs text-muted-foreground">
             {currentProvider.description}
