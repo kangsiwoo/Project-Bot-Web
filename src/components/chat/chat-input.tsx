@@ -16,6 +16,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
   const [value, setValue] = useState("");
   const isConnected = useChatStore((s) => s.isConnected);
   const isLoading = useChatStore((s) => s.isLoading);
+  const streamingMessageId = useChatStore((s) => s.streamingMessageId);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
@@ -62,9 +63,14 @@ export function ChatInput({ onSend }: ChatInputProps) {
           WebSocket 연결이 끊어졌습니다. 재연결 시도 중...
         </p>
       )}
-      {isLoading && isConnected && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          응답 대기 중...
+      {streamingMessageId && isConnected && (
+        <p className="mt-1 text-xs text-indigo-500 animate-pulse">
+          ⚡ Claude Code 작업 중...
+        </p>
+      )}
+      {isLoading && !streamingMessageId && isConnected && (
+        <p className="mt-1 text-xs text-muted-foreground animate-pulse">
+          ⏳ 응답 대기 중...
         </p>
       )}
     </div>
