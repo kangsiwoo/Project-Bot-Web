@@ -21,8 +21,10 @@ export function ModelSelector({
   const [hoveredModel, setHoveredModel] = useState<{
     model: LLMModel;
     providerId: ProviderId;
+    top: number;
   } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Click outside to close
   useEffect(() => {
@@ -81,7 +83,7 @@ export function ModelSelector({
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 z-50 flex items-start">
           {/* Menu Panel */}
-          <div className="w-56 rounded-lg border border-border bg-popover p-1 shadow-lg">
+          <div ref={menuRef} className="relative w-56 rounded-lg border border-border bg-popover p-1 shadow-lg">
             {PROVIDER_IDS.map((pid) => {
               const provider = LLM_PROVIDERS[pid];
               return (
@@ -101,9 +103,12 @@ export function ModelSelector({
                     return (
                       <button
                         key={model.id}
-                        onMouseEnter={() =>
-                          setHoveredModel({ model, providerId: pid })
-                        }
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const menuRect = menuRef.current?.getBoundingClientRect();
+                          const top = rect.top - (menuRect?.top ?? 0);
+                          setHoveredModel({ model, providerId: pid, top });
+                        }}
                         onMouseLeave={() => setHoveredModel(null)}
                         onClick={() => {
                           onProviderChange(pid);
@@ -143,9 +148,12 @@ export function ModelSelector({
             })}
           </div>
 
-          {/* Description Tooltip (appears on hover) */}
+          {/* Description Tooltip (appears next to hovered item) */}
           {hoveredModel && (
-            <div className="ml-2 w-52 rounded-lg border border-border bg-popover p-3 shadow-lg animate-in fade-in-0 zoom-in-95 duration-100">
+            <div
+              className="absolute left-full ml-2 w-52 rounded-lg border border-border bg-popover p-3 shadow-lg animate-in fade-in-0 duration-75"
+              style={{ top: hoveredModel.top }}
+            >
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span className="flex h-4 w-4 items-center justify-center rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-[9px] font-bold leading-none">
                   {LLM_PROVIDERS[hoveredModel.providerId].icon}
@@ -156,9 +164,6 @@ export function ModelSelector({
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {hoveredModel.model.description}
-              </p>
-              <p className="text-[10px] text-muted-foreground/60 mt-2">
-                {LLM_PROVIDERS[hoveredModel.providerId].name}
               </p>
             </div>
           )}
