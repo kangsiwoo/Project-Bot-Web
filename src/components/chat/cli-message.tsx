@@ -37,20 +37,23 @@ export function CliMessage({ message }: CliMessageProps) {
   );
 
   if (!isAssistant) {
-    // 사용자 메시지: 오른쪽 정렬, indigo 버블
+    // 사용자 메시지: 왼쪽 정렬, 어시스턴트와 동일한 레이아웃
     return (
-      <div className="flex justify-end px-4 py-3">
-        <div className="flex items-start gap-3 max-w-[80%]">
-          <div className="rounded-2xl rounded-tr-sm bg-indigo-600 px-4 py-2.5 text-white">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
-              {message.content}
-            </p>
-            <span className="block text-right text-[10px] text-indigo-200 mt-1">
+      <div className="flex gap-3 px-4 py-3">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+          <User className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-foreground">You</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">
               {formatTimestamp(message.timestamp)}
             </span>
           </div>
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            <User className="h-4 w-4" />
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed mb-0">
+              {message.content}
+            </p>
           </div>
         </div>
       </div>
