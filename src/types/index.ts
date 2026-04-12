@@ -113,6 +113,10 @@ export interface ChatMessage {
   content: string;
   tool_calls?: ToolCall[];
   timestamp: string;
+  // 에이전트 정보 (에이전트가 응답한 경우)
+  agent_id?: string;
+  agent_name?: string;
+  agent_color?: string;
 }
 
 export interface ToolCall {
@@ -133,4 +137,55 @@ export interface Device {
 
 export interface DeviceCreate {
   fcm_token: string;
+}
+
+// ── Agents ──
+export interface Agent {
+  id: string;
+  project_id: string;
+  name: string;
+  role_description: string | null;
+  system_prompt: string | null;
+  provider_key: string;
+  model_key: string;
+  avatar_color: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  assigned_channel_count: number;
+}
+
+export interface AgentDetail extends Agent {
+  assigned_channels: Array<{
+    channel_id: string;
+    channel_name: string;
+    sort_order: number;
+  }>;
+}
+
+export interface AgentCreate {
+  name: string;
+  role_description?: string;
+  system_prompt?: string;
+  provider_key: string;
+  model_key: string;
+  avatar_color?: string;
+  is_active?: boolean;
+}
+
+export interface AgentUpdate {
+  name?: string;
+  role_description?: string;
+  system_prompt?: string;
+  provider_key?: string;
+  model_key?: string;
+  avatar_color?: string;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface AgentChannelAssign {
+  channel_id: string;
+  sort_order?: number;
 }
