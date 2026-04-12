@@ -2,10 +2,15 @@
 import { create } from "zustand";
 import type { Agent } from "@/types";
 
+// 에이전트별 실시간 상태 ("idle" | "responding")
+export type AgentStatus = "idle" | "responding";
+
 interface AgentStore {
   agents: Agent[];
   selectedAgentId: string | null;
   isAgentPanelOpen: boolean;
+  // agent_id → 실시간 상태
+  agentStatuses: Record<string, AgentStatus>;
 
   // 액션
   setAgents: (agents: Agent[]) => void;
@@ -14,12 +19,14 @@ interface AgentStore {
   setSelectedAgentId: (id: string | null) => void;
   toggleAgentPanel: () => void;
   setAgentPanelOpen: (open: boolean) => void;
+  setAgentStatus: (agentId: string, status: AgentStatus) => void;
 }
 
 export const useAgentStore = create<AgentStore>((set) => ({
   agents: [],
   selectedAgentId: null,
   isAgentPanelOpen: false,
+  agentStatuses: {},
 
   setAgents: (agents) => set({ agents }),
 
@@ -47,4 +54,9 @@ export const useAgentStore = create<AgentStore>((set) => ({
     set((state) => ({ isAgentPanelOpen: !state.isAgentPanelOpen })),
 
   setAgentPanelOpen: (open) => set({ isAgentPanelOpen: open }),
+
+  setAgentStatus: (agentId, status) =>
+    set((state) => ({
+      agentStatuses: { ...state.agentStatuses, [agentId]: status },
+    })),
 }));

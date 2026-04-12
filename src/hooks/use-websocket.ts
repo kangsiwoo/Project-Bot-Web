@@ -72,8 +72,14 @@ export function useWebSocket(projectId: string, channelId?: string | null) {
           useAgentStore.getState().removeAgent(data.agent_id as string);
           return;
         }
+        if (data.type === "agent_status" && data.agent_id) {
+          useAgentStore.getState().setAgentStatus(
+            data.agent_id as string,
+            (data.status as "idle" | "responding") ?? "idle"
+          );
+          return;
+        }
         if (
-          data.type === "agent_status" ||
           data.type === "agent_channel_assigned" ||
           data.type === "agent_channel_unassigned"
         ) {

@@ -2,7 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
+import { useAgentStore } from "@/stores/agent-store";
 import type { Agent } from "@/types";
 
 interface AgentCardProps {
@@ -12,6 +14,9 @@ interface AgentCardProps {
 }
 
 export function AgentCard({ agent, isSelected, onClick }: AgentCardProps) {
+  const status = useAgentStore((s) => s.agentStatuses[agent.id]);
+  const isResponding = status === "responding";
+
   return (
     <button
       onClick={onClick}
@@ -36,10 +41,14 @@ export function AgentCard({ agent, isSelected, onClick }: AgentCardProps) {
           </p>
         )}
       </div>
-      {agent.assigned_channel_count > 0 && (
-        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
-          {agent.assigned_channel_count}
-        </Badge>
+      {isResponding ? (
+        <Loader2 className="h-3 w-3 animate-spin text-indigo-500 shrink-0" />
+      ) : (
+        agent.assigned_channel_count > 0 && (
+          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+            {agent.assigned_channel_count}
+          </Badge>
+        )
       )}
     </button>
   );

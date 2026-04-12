@@ -89,6 +89,9 @@ export default function ChatPage({
           role: msg.role as "user" | "assistant",
           content: msg.content,
           timestamp: msg.created_at,
+          agent_id: msg.agent_id ?? undefined,
+          agent_name: msg.agent_name ?? undefined,
+          agent_color: msg.agent_color ?? undefined,
         });
       }
       setHasMoreMessages(history.has_more);
@@ -112,6 +115,9 @@ export default function ChatPage({
         role: msg.role as "user" | "assistant",
         content: msg.content,
         timestamp: msg.created_at,
+        agent_id: msg.agent_id ?? undefined,
+        agent_name: msg.agent_name ?? undefined,
+        agent_color: msg.agent_color ?? undefined,
       }));
       prependMessages(chatMessages);
       setHasMoreMessages(loadMore.data.has_more);
