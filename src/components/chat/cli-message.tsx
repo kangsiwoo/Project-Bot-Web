@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ToolCallBlock } from "./tool-call-block";
 import { useChatStore } from "@/stores/chat-store";
 import { FALLBACK_PROVIDERS } from "@/lib/llm-providers";
+import { AgentAvatar } from "@/components/agents/AgentAvatar";
 import type { ChatMessage } from "@/types";
 import { Terminal, User, Cpu, Zap } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -87,26 +88,45 @@ export function CliMessage({ message }: CliMessageProps) {
   // Anthropic/OpenAI: 일반 채팅 버블 + API 아이콘
   const isCli = selectedProvider === "claude_code";
 
+  // 에이전트 응답 여부
+  const hasAgent = !!message.agent_id && !!message.agent_name;
+
   return (
     <div className={cn("flex gap-3 px-4 py-3", isCli ? "bg-muted/30" : "bg-muted/20")}>
-      {/* 프로바이더 아이콘 아바타 */}
-      <div
-        className={cn(
-          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-[10px] font-bold",
-          avatarBgClass
-        )}
-      >
-        {provider.icon}
-      </div>
+      {/* 아바타 - 에이전트가 있으면 AgentAvatar, 없으면 프로바이더 아이콘 */}
+      {hasAgent && message.agent_name && message.agent_color ? (
+        <AgentAvatar
+          name={message.agent_name}
+          color={message.agent_color}
+          size="sm"
+        />
+      ) : (
+        <div
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-[10px] font-bold",
+            avatarBgClass
+          )}
+        >
+          {provider.icon}
+        </div>
+      )}
 
       {/* 메시지 본문 */}
       <div className="flex-1 min-w-0 space-y-2">
-        {/* 헤더: 프로바이더명 + 모델 배지 + 실행 시간 */}
+        {/* 헤더: 에이전트명 또는 프로바이더명 + 모델 배지 + 실행 시간 */}
         <div className="flex items-center gap-2">
-          <ProviderIcon className={cn("h-3.5 w-3.5", iconColorClass)} />
-          <span className="text-xs font-semibold text-foreground">
-            {provider.name}
-          </span>
+          {hasAgent ? (
+            <span className="text-xs font-semibold text-foreground">
+              {message.agent_name}
+            </span>
+          ) : (
+            <>
+              <ProviderIcon className={cn("h-3.5 w-3.5", iconColorClass)} />
+              <span className="text-xs font-semibold text-foreground">
+                {provider.name}
+              </span>
+            </>
+          )}
           <Badge variant="outline" className="font-mono text-[10px] py-0 h-4">
             {selectedModel}
           </Badge>

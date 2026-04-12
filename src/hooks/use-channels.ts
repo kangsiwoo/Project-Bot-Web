@@ -15,6 +15,9 @@ interface ChannelMessage {
   content: string;
   user_id: string | null;
   username: string | null;
+  agent_id: string | null;
+  agent_name: string | null;
+  agent_color: string | null;
   created_at: string;
 }
 

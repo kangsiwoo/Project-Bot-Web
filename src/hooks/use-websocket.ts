@@ -5,7 +5,8 @@
 import { useEffect, useRef, useCallback } from "react";
 import { getAccessToken } from "@/lib/auth";
 import { useChatStore } from "@/stores/chat-store";
-import type { ChatMessage } from "@/types";
+import { useAgentStore } from "@/stores/agent-store";
+import type { ChatMessage, Agent } from "@/types";
 
 // 브라우저에서 현재 호스트 기반으로 WS URL 생성 (project-bot-web → project-bot)
 function getWsBase(): string {
@@ -58,6 +59,34 @@ export function useWebSocket(projectId: string, channelId?: string | null) {
           return;
         }
 
+        // 에이전트 이벤트 처리
+        if (data.type === "agent_created" && data.agent) {
+          useAgentStore.getState().upsertAgent(data.agent as Agent);
+          return;
+        }
+        if (data.type === "agent_updated" && data.agent) {
+          useAgentStore.getState().upsertAgent(data.agent as Agent);
+          return;
+        }
+        if (data.type === "agent_deleted" && data.agent_id) {
+          useAgentStore.getState().removeAgent(data.agent_id as string);
+          return;
+        }
+        if (data.type === "agent_status" && data.agent_id) {
+          useAgentStore.getState().setAgentStatus(
+            data.agent_id as string,
+            (data.status as "idle" | "responding") ?? "idle"
+          );
+          return;
+        }
+        if (
+          data.type === "agent_channel_assigned" ||
+          data.type === "agent_channel_unassigned"
+        ) {
+          // 채널 배정 이벤트는 현재 UI 갱신을 위해 별도 처리 가능
+          return;
+        }
+
         // 서버가 { type: "message", messages: [...] } 형식으로 전송
         if (data.type === "message" && Array.isArray(data.messages)) {
           // 스트리밍 완료 — 최종 메시지 도착 시 스트림 초기화
@@ -73,6 +102,9 @@ export function useWebSocket(projectId: string, channelId?: string | null) {
               content: msg.content ?? "",
               timestamp: msg.timestamp ?? new Date().toISOString(),
               tool_calls: msg.tool_calls,
+              agent_id: msg.agent_id,
+              agent_name: msg.agent_name,
+              agent_color: msg.agent_color,
             };
             addMessage(chatMsg);
           }
@@ -86,6 +118,9 @@ export function useWebSocket(projectId: string, channelId?: string | null) {
               content: data.content ?? "",
               timestamp: data.timestamp ?? data.created_at ?? new Date().toISOString(),
               tool_calls: data.tool_calls,
+              agent_id: data.agent_id,
+              agent_name: data.agent_name,
+              agent_color: data.agent_color,
             };
             addMessage(chatMsg);
           }
