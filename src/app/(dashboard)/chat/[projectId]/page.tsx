@@ -32,7 +32,7 @@ export default function ChatPage({
   const { data: channels } = useChannels(projectId);
   const { data: modelsData } = useModels();
   const user = useAuthStore((s) => s.user);
-  const isOwner = project?.owner_id === user?.id;
+  const isOwner = (project?.owner_id ?? project?.created_by) === user?.id;
   const selectedChannelId = useChatStore((s) => s.selectedChannelId);
   const setSelectedChannelId = useChatStore((s) => s.setSelectedChannelId);
   const isAgentPanelOpen = useAgentStore((s) => s.isAgentPanelOpen);
